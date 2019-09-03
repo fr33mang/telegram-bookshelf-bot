@@ -1,3 +1,4 @@
+import os
 import logging
 import re
 from xml.etree import ElementTree
@@ -12,7 +13,7 @@ from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 
 from service import goodreads_service, db
 from api import goodreads_api, AuthError, ApiError
-from config import TELEGRAM_BOT_TOKEN  #, TELEGRAM_PROXY_CONF
+from config import TELEGRAM_BOT_TOKEN, PORT, APP_URL  #, TELEGRAM_PROXY_CONF
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(message)s')
@@ -328,5 +329,14 @@ updater.dispatcher.add_handler(
     CallbackQueryHandler(add_to_shelf, pattern='rm_from_shelf')
 )
 
-updater.start_polling()
+if os.environ.get("HEROKU"):
+    print(os.environ.get("PORT"))
+    updater.start_webhook(listen="0.0.0.0",
+                          port=PORT,
+                          url_path=TELEGRAM_BOT_TOKEN)
+    print(f"{APP_URL}/{TELEGRAM_BOT_TOKEN}")
+    updater.bot.set_webhook(f"{APP_URL}/{TELEGRAM_BOT_TOKEN}")
+else:
+    updater.start_polling()
+
 updater.idle()

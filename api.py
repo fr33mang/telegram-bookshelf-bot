@@ -130,10 +130,12 @@ class GoodreadsAPI():
         shelf_xml = root.find("./book/my_review/shelves/shelf")
 
         book_md = (
-            f"*{book['title']}* \n"
+            f"*{book['title']}* [на сайте]({book['link']})\n"
             f"{', '.join(book['authors'])}\n\n"
-            f"{book['description'][:100]} [читать на сайте]({book['link']})\n"
         )
+        description = book.get('description')
+        if description:
+            book_md = book_md + f"{book['description'][:100]}\n"
 
         return {
             "markdown": book_md,

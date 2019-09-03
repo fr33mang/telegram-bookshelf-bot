@@ -18,9 +18,10 @@ goodreads_service = OAuth1Service(
 
 def _session(user_id):
     user = db.hgetall(user_id)
+    print(user)
 
     try:
-        tokens = [user[b'access_token'], user[b'access_token_secret']]
+        tokens = (user[b'access_token'], user[b'access_token_secret'])
         session = goodreads_service.get_session(tokens)
     except KeyError:
         return None
