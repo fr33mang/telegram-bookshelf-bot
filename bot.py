@@ -312,7 +312,8 @@ def check_auth(bot, update):
     conn.commit()
 
     # logger.info(f"Success auth: {str(db.hgetall(user_id))}")
-    bot.answer_callback_query(query.id, f"Авторизован! id {goodreads_id}")
+    update.callback_query.edit_message_text(str(f"Авторизован! id {goodreads_id}"))
+    # bot.answer_callback_query(query.id, f"Авторизован! id {goodreads_id}")
 
 
 # updater = Updater(TELEGRAM_BOT_TOKEN, request_kwargs=TELEGRAM_PROXY_CONF)

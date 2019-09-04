@@ -28,7 +28,6 @@ def _session(user_id):
     if tokens is not None:
         # tokens = (user[b'access_token'], user[b'access_token_secret'])
         # tokens = (tokens[0], tokens[1])
-        print(tokens)
         session = goodreads_service.get_session(tokens)
     else:
         return None

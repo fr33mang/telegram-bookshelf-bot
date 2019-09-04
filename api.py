@@ -94,7 +94,6 @@ class GoodreadsAPI():
         response = session.get(f'/review/list',
                                params=params)
 
-        print(response.content)
         root = ElementTree.fromstring(response.content)
 
         book_fields = frozenset(['id', 'title', 'publication_year', 'link'])
@@ -157,15 +156,10 @@ class GoodreadsAPI():
         if remove:
             params['a'] = 'remove'
 
-        print(params)
         response = session.get(f'shelf/add_to_shelf.xml',
                                params=params)
 
         if response.status_code not in (200, 201):
-            print("ОШИБКА!!!")
-            print(response.status_code)
-            print(response.content)
-            print(params)
             raise ApiError("Ошибка добавления!")
 
         message = "Книга добавлена на полку!"
