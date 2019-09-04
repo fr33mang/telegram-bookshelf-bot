@@ -11,7 +11,8 @@ from telegram.ext import (
 from telegram.ext.filters import Filters
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 
-from service import goodreads_service, db
+from postgres import conn
+from service import goodreads_service #, db
 from api import goodreads_api, AuthError, ApiError
 from config import TELEGRAM_BOT_TOKEN, PORT, APP_URL  #, TELEGRAM_PROXY_CONF
 
@@ -244,15 +245,21 @@ def add_to_shelf(bot, update):
     update.callback_query.edit_message_reply_markup(reply_markup=markup)
 
 
+# TODO: prevent multiple /autorize
 def authorize(bot, update):
     req_token, req_token_secret = goodreads_service.get_request_token(header_auth=True)
     authorize_url = goodreads_service.get_authorize_url(req_token)
 
     user_id = update.message.from_user.id
-    db.hmset(user_id, {'req_token': req_token,
-                       'req_token_secret': req_token_secret})
+    # db.hmset(user_id, {'req_token': req_token,
+    #                    'req_token_secret': req_token_secret})
+    with conn.cursor() as cur:
+        cur.execute("INSERT INTO tokens (id, request_token, request_token_secret) "
+                    "VALUES(%s, %s, %s)"
+                    "ON CONFLICT DO NOTHING", (user_id, req_token, req_token_secret))
+    conn.commit()
 
-    logger.info(f"authorize: {str(db.hgetall(user_id))}")
+    # logger.info(f"authorize: {str(db.hgetall(user_id))}")
 
     markup = InlineKeyboardMarkup(
         [[InlineKeyboardButton('Готово!', callback_data='check_auth')]]
@@ -267,7 +274,10 @@ def check_auth(bot, update):
     query = update.callback_query
     user_id = query.from_user.id
 
-    tokens = db.hmget(user_id, ['req_token', 'req_token_secret'])
+    # tokens = db.hmget(user_id, ['req_token', 'req_token_secret'])
+    with conn.cursor() as cur:
+        cur.execute("SELECT request_token, request_token_secret FROM tokens where id = %s", (user_id,))
+        tokens = cur.fetchone()
 
     try:
         session = goodreads_service.get_auth_session(*tokens)
@@ -286,9 +296,14 @@ def check_auth(bot, update):
         'access_token_secret': session.access_token_secret,
         'goodreads_id': goodreads_id,
     }
-    db.hmset(user_id, user_dict)
+    # db.hmset(user_id, user_dict)
+    with conn.cursor() as cur:
+        cur.execute("UPDATE tokens "
+                    "SET (access_token, access_token_secret, goodreads_id) = (%s, %s, %s) "
+                    "WHERE id = %s", (session.access_token, session.access_token_secret, goodreads_id, user_id))
+    conn.commit()
 
-    logger.info(f"Success auth: {str(db.hgetall(user_id))}")
+    # logger.info(f"Success auth: {str(db.hgetall(user_id))}")
     bot.answer_callback_query(query.id, f"Авторизован! id {goodreads_id}")
 
 
@@ -330,11 +345,9 @@ updater.dispatcher.add_handler(
 )
 
 if os.environ.get("HEROKU"):
-    print(os.environ.get("PORT"))
     updater.start_webhook(listen="0.0.0.0",
                           port=PORT,
                           url_path=TELEGRAM_BOT_TOKEN)
-    print(f"{APP_URL}/{TELEGRAM_BOT_TOKEN}")
     updater.bot.set_webhook(f"{APP_URL}/{TELEGRAM_BOT_TOKEN}")
 else:
     updater.start_polling()

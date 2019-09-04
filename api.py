@@ -94,6 +94,7 @@ class GoodreadsAPI():
         response = session.get(f'/review/list',
                                params=params)
 
+        print(response.content)
         root = ElementTree.fromstring(response.content)
 
         book_fields = frozenset(['id', 'title', 'publication_year', 'link'])

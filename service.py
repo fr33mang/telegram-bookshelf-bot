@@ -1,9 +1,10 @@
 from rauth.service import OAuth1Service
-from vedis import Vedis
+# from vedis import Vedis
 
 from config import CONSUMER_KEY, CONSUMER_SECRET
+from postgres import conn
 
-db = Vedis('vedis.db')
+# db = Vedis('vedis.db')
 
 goodreads_service = OAuth1Service(
     consumer_key=CONSUMER_KEY,
@@ -17,13 +18,19 @@ goodreads_service = OAuth1Service(
 
 
 def _session(user_id):
-    user = db.hgetall(user_id)
-    print(user)
+    # user = db.hgetall(user_id)
+    with conn.cursor() as cur:
+        cur.execute("SELECT access_token, access_token_secret "
+                    "FROM tokens where id = %s", (user_id,))
+        tokens = cur.fetchone()
+    conn.commit()
 
-    try:
-        tokens = (user[b'access_token'], user[b'access_token_secret'])
+    if tokens is not None:
+        # tokens = (user[b'access_token'], user[b'access_token_secret'])
+        # tokens = (tokens[0], tokens[1])
+        print(tokens)
         session = goodreads_service.get_session(tokens)
-    except KeyError:
+    else:
         return None
 
     return session
