@@ -21,11 +21,19 @@ logging.basicConfig(level=logging.DEBUG,
 logger = logging.getLogger()
 
 
-
-
-# TODO: start hanler
 def start_handler(bot, update):
-    ...
+    text = (
+        "Этот бот разрабатывается для замены приложения *Goodreads.com*. \n"
+        "В данный момент имеется возможность управление списками книг, "
+        "а также, для поиска и добавления новых книг. \n"
+        "Перед началом работы используйте: \n /authorize, \n"
+        "после перехода по ссылке и авторизации нажмите 'Готово!' \n"
+        "Для просмотра полок используйте /shelves \n"
+    )
+
+    update.message.reply_markdown(text=str(text),
+                                  parse_mode=ParseMode.MARKDOWN,
+                                  disable_web_page_preview=True)
 
 
 def search_books(bot, update):
