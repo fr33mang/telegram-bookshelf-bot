@@ -17,7 +17,10 @@ from api import goodreads_api, AuthError, ApiError
 from config import TELEGRAM_BOT_TOKEN, PORT, APP_URL  #, TELEGRAM_PROXY_CONF
 
 logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(message)s')
+                    format="%(filename)s[LINE:%(lineno)d]# - "
+                           "%(asctime)s - "
+                           "%(name)s: "
+                           "%(message)s")
 logger = logging.getLogger()
 
 
@@ -39,16 +42,16 @@ def start_handler(bot, update):
 def search_books(bot, update):
     page = 1
     if not update.message:
-        logger.info(f"search_books message: {update.callback_query.data}")
+        logger.info(f"message: {update.callback_query.data}")
         page = int(update.callback_query.data.split(' ')[1])
         search_query = " ".join(update.callback_query.data.split(' ')[2:])
         user_id = update.callback_query.from_user.id
     else:
-        logger.info(f"search_books message: {update.message.text}")
+        logger.info(f"message: {update.message.text}")
         user_id = update.message.from_user.id
         search_query = update.message.text
 
-    logger.info(f"search_books: {search_query}")
+    logger.info(f"{search_query}")
 
     try:
         # books = get_search_books(user_id, search_query, page=page)
