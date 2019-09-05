@@ -1,9 +1,12 @@
 import os
 import psycopg2
 
-DATABASE_URL = os.environ['DATABASE_URL']
+from config import DATABASE_URL
 
-conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+if os.environ.get("HEROKU"):
+    conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+else:
+    conn = psycopg2.connect(DATABASE_URL)
 
 cur = conn.cursor()
 # cur.execute("DROP TABLE tokens;")

@@ -1,7 +1,7 @@
 from xml.etree import ElementTree
 from service import _session
 
-from config import CONSUMER_KEY  # , CONSUMER_SECRET
+from config import CONSUMER_KEY
 
 
 class AuthError(Exception):

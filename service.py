@@ -18,7 +18,6 @@ goodreads_service = OAuth1Service(
 
 
 def _session(user_id):
-    # user = db.hgetall(user_id)
     with conn.cursor() as cur:
         cur.execute("SELECT access_token, access_token_secret "
                     "FROM tokens where id = %s", (user_id,))
@@ -26,8 +25,6 @@ def _session(user_id):
     conn.commit()
 
     if tokens is not None:
-        # tokens = (user[b'access_token'], user[b'access_token_secret'])
-        # tokens = (tokens[0], tokens[1])
         session = goodreads_service.get_session(tokens)
     else:
         return None

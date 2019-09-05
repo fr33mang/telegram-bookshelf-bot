@@ -1,5 +1,4 @@
-#vedis
-*.db
+.environment 
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

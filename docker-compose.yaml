@@ -1,0 +1,13 @@
+version: "3"
+services:
+  bot:
+    container_name: bot
+    build: .
+    env_file: ./.environment
+    depends_on:
+      - db
+  db:
+    image: "postgres:11"
+    container_name: "postgres"
+    ports:
+      - "54320:5432"

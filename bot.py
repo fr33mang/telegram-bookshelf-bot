@@ -12,16 +12,16 @@ from telegram.ext.filters import Filters
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 
 from postgres import conn
-from service import goodreads_service #, db
+from service import goodreads_service
 from api import goodreads_api, AuthError, ApiError
-from config import TELEGRAM_BOT_TOKEN, PORT, APP_URL  #, TELEGRAM_PROXY_CONF
+from config import TELEGRAM_BOT_TOKEN, PORT, APP_URL
 
 logging.basicConfig(level=logging.DEBUG,
                     format="%(filename)s[LINE:%(lineno)d]# - "
                            "%(asctime)s - "
-                           "%(name)s: "
+                           "%(funcName)s: "
                            "%(message)s")
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 def start_handler(bot, update):
@@ -262,8 +262,6 @@ def authorize(bot, update):
     authorize_url = goodreads_service.get_authorize_url(req_token)
 
     user_id = update.message.from_user.id
-    # db.hmset(user_id, {'req_token': req_token,
-    #                    'req_token_secret': req_token_secret})
     with conn.cursor() as cur:
         cur.execute("INSERT INTO tokens (id, request_token, request_token_secret) "
                     "VALUES(%s, %s, %s)"
@@ -285,7 +283,6 @@ def check_auth(bot, update):
     query = update.callback_query
     user_id = query.from_user.id
 
-    # tokens = db.hmget(user_id, ['req_token', 'req_token_secret'])
     with conn.cursor() as cur:
         cur.execute("SELECT request_token, request_token_secret FROM tokens where id = %s", (user_id,))
         tokens = cur.fetchone()
@@ -307,7 +304,6 @@ def check_auth(bot, update):
         'access_token_secret': session.access_token_secret,
         'goodreads_id': goodreads_id,
     }
-    # db.hmset(user_id, user_dict)
     with conn.cursor() as cur:
         cur.execute("UPDATE tokens "
                     "SET (access_token, access_token_secret, goodreads_id) = (%s, %s, %s) "
