@@ -231,10 +231,14 @@ def book(bot, update):
 
     markup = _book_buttons(book.get('shelf'), book_id)
 
-    update.message.reply_photo(photo=book['image'],
-                               caption=book['markdown'],
-                               parse_mode=ParseMode.MARKDOWN,
-                               reply_markup=markup)
+    update.message.reply_text(text=book['markdown'],
+                              parse_mode=ParseMode.MARKDOWN,
+                              reply_markup=markup)
+
+    # update.message.reply_photo(photo=book['image'],
+    #                            caption=book['markdown'],
+    #                            parse_mode=ParseMode.MARKDOWN,
+    #                            reply_markup=markup)
 
 
 def add_to_shelf(bot, update):
