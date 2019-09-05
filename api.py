@@ -151,9 +151,11 @@ class GoodreadsAPI():
         params = {
             'name': shelf,
             'book_id': book_id,
-            # 'a': 'remove',
         }
         if remove:
+            params['name'] = 'to-read'
+            response = session.get(f'shelf/add_to_shelf.xml',
+                                   params=params)
             params['a'] = 'remove'
 
         response = session.get(f'shelf/add_to_shelf.xml',
