@@ -121,7 +121,10 @@ class GoodreadsAPI():
 
         book_xml = root.find('book')
 
-        book_fields = ['id', 'title', 'description', 'image_url', 'small_image_url', 'link']
+        book_fields = [
+            'id', 'title', 'description',
+            'image_url', 'small_image_url', 'link'
+        ]
         book = {field: book_xml.find(field).text for field in book_fields}
 
         authors = book_xml.find("authors")
@@ -137,11 +140,14 @@ class GoodreadsAPI():
         if description:
             book_md = book_md + f"{book['description'][:100]}\n"
 
-        return {
+        response = {
             "markdown": book_md,
-            "image": book['image_url'],  # or book['small_image_url']
-            "shelf": shelf_xml.attrib['name'] if shelf_xml is not None else None,
+            "image": book['image_url'] or book['small_image_url']
         }
+        if shelf_xml is not None:
+            response['shelf'] = shelf_xml.attrib['name']
+
+        return response
 
     @staticmethod
     @session_decorator

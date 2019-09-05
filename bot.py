@@ -54,8 +54,8 @@ def search_books(bot, update):
     logger.info(f"{search_query}")
 
     try:
-        # books = get_search_books(user_id, search_query, page=page)
-        books = goodreads_api.get_search_books(user_id, search_query, page=page)
+        books = goodreads_api.get_search_books(user_id, search_query,
+                                               page=page)
     except AuthError as ex:
         return bot.send_message(user_id, text=str(ex))
 
@@ -70,13 +70,15 @@ def search_books(bot, update):
 
     buttons = []
     if page > 1:
+        callback_data = f'search_books {page-1} {search_query}'
         buttons.append(
-            InlineKeyboardButton("<", callback_data=f'search_books {page-1} {search_query}')
+            InlineKeyboardButton("<", callback_data=callback_data)
         )
 
     if books:
+        callback_data = f'search_books {page+1} {search_query}'
         buttons.append(
-            InlineKeyboardButton(">", callback_data=f'search_books {page+1} {search_query}')
+            InlineKeyboardButton(">", callback_data=callback_data)
         )
 
     markup = InlineKeyboardMarkup([buttons])
@@ -243,7 +245,8 @@ def add_to_shelf(bot, update):
     remove = "rm_from_shelf" in query.data
 
     try:
-        response_text = goodreads_api.add_to_shelf(user_id, shelf, book_id, remove=remove)
+        response_text = goodreads_api.add_to_shelf(user_id, shelf,
+                                                   book_id, remove=remove)
     except (AuthError, ApiError) as ex:
         return bot.send_message(user_id, str(ex))
 
@@ -258,14 +261,18 @@ def add_to_shelf(bot, update):
 
 # TODO: prevent multiple /autorize
 def authorize(bot, update):
-    req_token, req_token_secret = goodreads_service.get_request_token(header_auth=True)
+    req_token, req_token_secret = goodreads_service.get_request_token(
+                                                        header_auth=True
+                                                    )
     authorize_url = goodreads_service.get_authorize_url(req_token)
 
     user_id = update.message.from_user.id
     with conn.cursor() as cur:
-        cur.execute("INSERT INTO tokens (id, request_token, request_token_secret) "
+        cur.execute("INSERT INTO tokens (id, request_token, "
+                    "                     request_token_secret) "
                     "VALUES(%s, %s, %s)"
-                    "ON CONFLICT DO NOTHING", (user_id, req_token, req_token_secret))
+                    "ON CONFLICT DO NOTHING", (user_id, req_token,
+                                               req_token_secret))
     conn.commit()
 
     # logger.info(f"authorize: {str(db.hgetall(user_id))}")
@@ -284,7 +291,8 @@ def check_auth(bot, update):
     user_id = query.from_user.id
 
     with conn.cursor() as cur:
-        cur.execute("SELECT request_token, request_token_secret FROM tokens where id = %s", (user_id,))
+        cur.execute("SELECT request_token, request_token_secret "
+                    "FROM tokens where id = %s", (user_id,))
         tokens = cur.fetchone()
 
     try:
@@ -299,19 +307,18 @@ def check_auth(bot, update):
     goodreads_id = root.find('user').attrib['id']
 
     logger.info(f"access_token => {session.access_token}")
-    user_dict = {
-        'access_token': session.access_token,
-        'access_token_secret': session.access_token_secret,
-        'goodreads_id': goodreads_id,
-    }
     with conn.cursor() as cur:
         cur.execute("UPDATE tokens "
-                    "SET (access_token, access_token_secret, goodreads_id) = (%s, %s, %s) "
-                    "WHERE id = %s", (session.access_token, session.access_token_secret, goodreads_id, user_id))
+                    "SET (access_token, access_token_secret, "
+                    "     goodreads_id) = (%s, %s, %s) "
+                    "WHERE id = %s", (session.access_token,
+                                      session.access_token_secret,
+                                      goodreads_id,
+                                      user_id))
     conn.commit()
 
     # logger.info(f"Success auth: {str(db.hgetall(user_id))}")
-    update.callback_query.edit_message_text(str(f"Авторизован! id {goodreads_id}"))
+    update.callback_query.edit_message_text(str(f"Авторизован:{goodreads_id}"))
     # bot.answer_callback_query(query.id, f"Авторизован! id {goodreads_id}")
 
 
