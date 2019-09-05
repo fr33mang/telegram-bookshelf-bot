@@ -1,7 +1,6 @@
 import os
 import logging
 import re
-from xml.etree import ElementTree
 
 from telegram.ext import (
     Updater, CommandHandler,
@@ -117,7 +116,7 @@ def shelves(bot, update):
     buttons = []
     for s in shelves:
         buttons.append(
-            [InlineKeyboardButton(s["name"],
+            [InlineKeyboardButton(f"{s['name']}({s['book_count']})",
                                   callback_data=f"books_{s['name']}_1")]
         )
 
@@ -305,10 +304,7 @@ def check_auth(bot, update):
         bot.answer_callback_query(query.id, "Ошибка авторизации!")
         return
 
-    response_content = goodreads_api.check_auth(session)
-
-    root = ElementTree.fromstring(response_content)
-    goodreads_id = root.find('user').attrib['id']
+    goodreads_id = goodreads_api.me(session)
 
     logger.info(f"access_token => {session.access_token}")
     with conn.cursor() as cur:

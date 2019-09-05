@@ -13,27 +13,28 @@ class ApiError(Exception):
 
 
 def session_decorator(func):
-    def wrapper(*args, **kwargs):
+    def wrapper(self, *args, **kwargs):
         session = _session(args[0])
         if not session:
             raise AuthError("Пожалуйста, используйте /authorize")
 
         kwargs['session'] = session
-        return func(*args[1:], **kwargs)
+        return func(self, *args[1:], **kwargs)
 
     return wrapper
 
 
 class GoodreadsAPI():
-    @staticmethod
-    def check_auth(session=None):
+    def me(self, session=None):
         response = session.get('/api/auth_user')
 
-        return response.content
+        root = ElementTree.fromstring(response.content)
+        goodreads_id = root.find('user').attrib['id']
 
-    @staticmethod
+        return goodreads_id
+
     @session_decorator
-    def get_search_books(search_query, page=1, per_page=5, session=None):
+    def get_search_books(self, search_query, page=1, per_page=5, session=None):
         params = {
             "q": search_query,
             "key": CONSUMER_KEY,
@@ -56,14 +57,14 @@ class GoodreadsAPI():
 
         return books
 
-    @staticmethod
     @session_decorator
-    def get_shelves(page=1, per_page=5, session=None):
+    def get_shelves(self, page=1, per_page=5, session=None):
+        goodreads_id = self.me(session=session)
+
         params = {
             "key": CONSUMER_KEY,
+            "user_id": goodreads_id,
             "format": "xml",
-            "page": page,
-            "per_page": per_page,
         }
         response = session.get(f'/shelf/list.xml',
                                params=params)
@@ -80,9 +81,8 @@ class GoodreadsAPI():
 
         return shelves
 
-    @staticmethod
     @session_decorator
-    def get_books(page=1, per_page=5, shelf="etc", session=None):
+    def get_books(self, page=1, per_page=5, shelf="etc", session=None):
         params = {
             "v": 2,
             "key": CONSUMER_KEY,
@@ -108,9 +108,8 @@ class GoodreadsAPI():
 
         return books
 
-    @staticmethod
     @session_decorator
-    def get_book(book_id, session=None):
+    def get_book(self, book_id, session=None):
         params = {
             "key": CONSUMER_KEY,
             "format": "xml",
@@ -149,9 +148,8 @@ class GoodreadsAPI():
 
         return response
 
-    @staticmethod
     @session_decorator
-    def add_to_shelf(shelf, book_id, remove=False, session=None):
+    def add_to_shelf(self, shelf, book_id, remove=False, session=None):
         # can also remove book from shelf (tnx for greads developers)
 
         params = {
