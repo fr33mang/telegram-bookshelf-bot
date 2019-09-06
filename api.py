@@ -76,6 +76,7 @@ class GoodreadsAPI():
 
         for shelf in root.iter('user_shelf'):
             shelf = {field: shelf.find(field).text for field in shelf_fields}
+            # shelf['name'] = " ".join(shelf['name'].split("-")).capitalize()
 
             shelves.append(shelf)
 
@@ -132,12 +133,14 @@ class GoodreadsAPI():
         shelf_xml = root.find("./book/my_review/shelves/shelf")
 
         book_md = (
-            f"*{book['title']}* [на сайте]({book['link']})\n"
+            f"*{book['title']}* \n"
             f"{', '.join(book['authors'])}\n\n"
         )
         description = book.get('description')
         if description:
-            book_md = book_md + f"{book['description'][:100]}\n"
+            book_md = book_md + f"{book['description'][:200]}... "
+
+        book_md = book_md + f"[на сайте]({book['link']})\n"
 
         response = {
             "markdown": book_md,

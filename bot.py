@@ -101,15 +101,13 @@ def search_books(bot, update):
 
 
 def shelves(bot, update):
-    page = 1
     if not update.message:
-        page = int(update.callback_query.data.split('_')[1])
         user_id = update.callback_query.from_user.id
     else:
         user_id = update.message.from_user.id
 
     try:
-        shelves = goodreads_api.get_shelves(user_id, page)
+        shelves = goodreads_api.get_shelves(user_id)
     except AuthError as ex:
         return bot.send_message(user_id, text=str(ex))
 
@@ -166,18 +164,22 @@ def books(bot, update):
 
     logger.info(str(result))
 
-    buttons = []
+    buttons = [[]]
     if page > 1:
-        buttons.append(
+        buttons[0].append(
             InlineKeyboardButton("<", callback_data=f'books_{shelf}_{page-1}')
         )
 
     if len(books) == per_page:
-        buttons.append(
+        buttons[0].append(
             InlineKeyboardButton(">", callback_data=f'books_{shelf}_{page+1}')
         )
 
-    markup = InlineKeyboardMarkup([buttons])
+    buttons.append(
+        [InlineKeyboardButton("Список полок", callback_data=f'shelves')]
+    )
+
+    markup = InlineKeyboardMarkup(buttons)
     if update.callback_query:
         update.callback_query.edit_message_text(str(result),
                                                 parse_mode=ParseMode.MARKDOWN,
@@ -190,7 +192,9 @@ def books(bot, update):
                                       reply_markup=markup)
 
 
-def _book_buttons(shelf, book_id):
+def _book_buttons(shelf, book_id, user_id):
+    # shelves = goodreads_api.get_shelves(user_id)
+
     shelves = {
         'to read': 'to-read',
         'reading': 'currently-reading',
@@ -228,7 +232,7 @@ def book(bot, update):
     except AuthError as ex:
         return bot.send_message(user_id, text=str(ex))
 
-    markup = _book_buttons(book.get('shelf'), book_id)
+    markup = _book_buttons(book.get('shelf'), book_id, user_id)
 
     update.message.reply_text(text=book['markdown'],
                               parse_mode=ParseMode.MARKDOWN,
@@ -257,7 +261,7 @@ def add_to_shelf(bot, update):
 
     if remove:
         shelf = None
-    markup = _book_buttons(shelf, book_id)
+    markup = _book_buttons(shelf, book_id, user_id)
 
     update.callback_query.edit_message_reply_markup(reply_markup=markup)
 
@@ -341,6 +345,9 @@ updater.dispatcher.add_handler(
 )
 
 updater.dispatcher.add_handler(CommandHandler('shelves', shelves))
+updater.dispatcher.add_handler(
+    CallbackQueryHandler(shelves, pattern='shelves')
+)
 
 updater.dispatcher.add_handler(CommandHandler('books', books))
 updater.dispatcher.add_handler(
