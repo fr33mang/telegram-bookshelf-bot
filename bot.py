@@ -114,7 +114,7 @@ def shelves(bot, update):
     buttons = []
     for s in shelves:
         buttons.append(
-            [InlineKeyboardButton(f"{s['name']}({s['book_count']})",
+            [InlineKeyboardButton(f"{s['show_name']}({s['book_count']})",
                                   callback_data=f"books_{s['name']}_1")]
         )
 
@@ -193,14 +193,10 @@ def books(bot, update):
 
 
 def _book_buttons(shelf, book_id, user_id):
-    # shelves = goodreads_api.get_shelves(user_id)
+    shelves = goodreads_api.get_shelves(user_id)
 
-    shelves = {
-        'to read': 'to-read',
-        'reading': 'currently-reading',
-        'read': 'read',
-        '🗑': "remove" if shelf else None,
-    }
+    shelves = {shelf['show_name']: shelf['name'] for shelf in shelves}
+    shelves['🗑'] = "remove" if shelf else None
 
     buttons = []
     for text, value in shelves.items():

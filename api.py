@@ -76,11 +76,11 @@ class GoodreadsAPI():
 
         for shelf in root.iter('user_shelf'):
             shelf = {field: shelf.find(field).text for field in shelf_fields}
-            # shelf['name'] = " ".join(shelf['name'].split("-")).capitalize()
+            shelf['show_name'] = " ".join(shelf['name'].split("-")).title()
 
             shelves.append(shelf)
 
-        return shelves
+        return shelves[::-1]
 
     @session_decorator
     def get_books(self, page=1, per_page=5, shelf="etc", session=None):
