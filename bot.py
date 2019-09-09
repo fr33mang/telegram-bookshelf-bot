@@ -322,7 +322,6 @@ def check_auth(bot, update):
     # bot.answer_callback_query(query.id, f"Авторизован! id {goodreads_id}")
 
 
-# updater = Updater(TELEGRAM_BOT_TOKEN, request_kwargs=TELEGRAM_PROXY_CONF)
 updater = Updater(TELEGRAM_BOT_TOKEN)
 
 updater.dispatcher.add_handler(CommandHandler('start', start_handler))

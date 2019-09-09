@@ -1,10 +1,7 @@
 from rauth.service import OAuth1Service
-# from vedis import Vedis
 
 from config import CONSUMER_KEY, CONSUMER_SECRET
 from postgres import conn
-
-# db = Vedis('vedis.db')
 
 goodreads_service = OAuth1Service(
     consumer_key=CONSUMER_KEY,
