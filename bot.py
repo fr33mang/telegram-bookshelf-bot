@@ -201,7 +201,7 @@ def _book_buttons(shelf, book_id, user_id):
     buttons = []
     for text, value in shelves.items():
         if text != '🗑':
-            button_text = text if shelf != value else f"👉{text}"
+            button_text = text if shelf != value else f"✔️{text}"
             callback_data = f'add_to_shelf {value} {book_id}'
         elif bool(shelf):
             button_text = '🗑'
