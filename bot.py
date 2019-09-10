@@ -51,12 +51,15 @@ def search_books(bot, update):
         user_id = update.message.from_user.id
         search_query = update.message.text
 
-    logger.info(f"{search_query}")
+    logger.info((f"user_id: {user_id}, "
+                 f"search_query:{search_query}, "
+                 f" page:{page}"))
 
     try:
         books = goodreads_api.get_search_books(user_id, search_query,
                                                page=page)
     except AuthError as ex:
+        logger.error(f"AuthError: user_id {user_id}")
         return bot.send_message(user_id, text=str(ex))
 
     result = []
@@ -103,13 +106,18 @@ def search_books(bot, update):
 
 def shelves(bot, update):
     if not update.message:
+        logger.info(f"message: {update.callback_query.data}")
         user_id = update.callback_query.from_user.id
     else:
+        logger.info(f"message: {update.message.text}")
         user_id = update.message.from_user.id
+
+    logger.info(f"user_id: {user_id}")
 
     try:
         shelves = goodreads_api.get_shelves(user_id)
     except AuthError as ex:
+        logger.error(f"AuthError: user_id {user_id}")
         return bot.send_message(user_id, text=str(ex))
 
     buttons = []
@@ -133,20 +141,26 @@ def shelves(bot, update):
 
 
 def books(bot, update):
-    # logger.debug(f"Message from user {update.message.from_user.id}")
     page = 1
     per_page = 5
     shelf = 'etc'
     if not update.message:
+        logger.info(f"message: {update.callback_query.data}")
         shelf = update.callback_query.data.split('_')[1]
         page = int(update.callback_query.data.split('_')[2])
         user_id = update.callback_query.from_user.id
     else:
+        logger.info(f"message: {update.message.text}")
         user_id = update.message.from_user.id
+
+    logger.info((f"user_id: {user_id}, "
+                 f"shelf:{shelf}, "
+                 f" page:{page}"))
 
     try:
         books = goodreads_api.get_books(user_id, page, per_page, shelf)
     except AuthError as ex:
+        logger.error(f"AuthError: user_id {user_id}")
         return bot.send_message(user_id, text=str(ex))
 
     result = []
@@ -224,9 +238,13 @@ def book(bot, update):
     user_id = update.message.from_user.id
     book_id = update.message.text.split('_')[1]
 
+    logger.info((f"user_id: {user_id}, "
+                 f"book_id:{book_id}"))
+
     try:
         book = goodreads_api.get_book(user_id, book_id)
     except AuthError as ex:
+        logger.error(f"AuthError: user_id {user_id}")
         return bot.send_message(user_id, text=str(ex))
 
     markup = _book_buttons(book.get('shelf'), book_id, user_id)
@@ -243,15 +261,23 @@ def book(bot, update):
 
 def add_to_shelf(bot, update):
     query = update.callback_query
+    logger.info(f"query: {query}")
+
     shelf, book_id = query.data.split(' ')[1:3]
     user_id = query.from_user.id
 
     remove = "rm_from_shelf" in query.data
 
+    logger.info((f"user_id: {user_id}, "
+                 f"shelf:{shelf}, "
+                 f" book_id:{book_id}, "
+                 f" remove:{remove}"))
+
     try:
         response_text = goodreads_api.add_to_shelf(user_id, shelf,
                                                    book_id, remove=remove)
     except (AuthError, ApiError) as ex:
+        logger.error(str(ex))
         return bot.send_message(user_id, str(ex))
 
     bot.answer_callback_query(query.id, response_text)
@@ -279,7 +305,7 @@ def authorize(bot, update):
                                                req_token_secret))
     conn.commit()
 
-    # logger.info(f"authorize: {str(db.hgetall(user_id))}")
+    logger.info(f"Authorize, sending url to user: {str(user_id)}")
 
     markup = InlineKeyboardMarkup(
         [[InlineKeyboardButton('Готово!', callback_data='check_auth')]]
@@ -302,12 +328,13 @@ def check_auth(bot, update):
     try:
         session = goodreads_service.get_auth_session(*tokens)
     except KeyError:
+        logger.error(f"authorize error: user_id {user_id}")
         bot.answer_callback_query(query.id, "Ошибка авторизации!")
         return
 
     goodreads_id = goodreads_api.me(session)
 
-    logger.info(f"access_token => {session.access_token}")
+    logger.info(f"Success auth, user_id: {user_id}")
     with conn.cursor() as cur:
         cur.execute("UPDATE tokens "
                     "SET (access_token, access_token_secret, "
@@ -318,9 +345,7 @@ def check_auth(bot, update):
                                       user_id))
     conn.commit()
 
-    # logger.info(f"Success auth: {str(db.hgetall(user_id))}")
-    update.callback_query.edit_message_text(str(f"Авторизован:{goodreads_id}"))
-    # bot.answer_callback_query(query.id, f"Авторизован! id {goodreads_id}")
+    update.callback_query.edit_message_text(str(f"Авторизован:{goodreads_id}")) 
 
 
 updater = Updater(TELEGRAM_BOT_TOKEN)
