@@ -14,6 +14,7 @@ from postgres import conn
 from service import goodreads_service
 from api import goodreads_api, AuthError, ApiError
 from config import TELEGRAM_BOT_TOKEN, PORT, APP_URL
+from utils import strip_tags
 
 logging.basicConfig(level=logging.DEBUG,
                     format="%(filename)s[LINE:%(lineno)d]# - "
@@ -65,7 +66,7 @@ def search_books(bot, update):
     result = []
     for index, book in enumerate(books):
         book_md = (
-            f"*{book['title']}* \n"
+            f"*{strip_tags(book['title'])}* \n"
             f"{', '.join(book['authors'])}\n"
             f"/book\_{book['id']} "  # noqa
         )
@@ -167,7 +168,7 @@ def books(bot, update):
     for book in books:
         book['link'] = f"[->]({book['link']})"
         book_md = (
-            f"*{book['title']}* "
+            f"*{strip_tags(book['title'])}* "
             f"{book['link']}\n"
             f"{', '.join(book['authors'])}\n"
             f"/book\_{book['id']} "  # noqa
@@ -249,14 +250,9 @@ def book(bot, update):
 
     markup = _book_buttons(book.get('shelf'), book_id, user_id)
 
-    update.message.reply_text(text=book['markdown'],
+    update.message.reply_text(text=strip_tags(book['markdown']),
                               parse_mode=ParseMode.MARKDOWN,
                               reply_markup=markup)
-
-    # update.message.reply_photo(photo=book['image'],
-    #                            caption=book['markdown'],
-    #                            parse_mode=ParseMode.MARKDOWN,
-    #                            reply_markup=markup)
 
 
 def add_to_shelf(bot, update):
