@@ -76,13 +76,13 @@ def search_books(bot, update):
     if page > 1:
         callback_data = f'search_books {page-1} {search_query}'
         buttons.append(
-            InlineKeyboardButton("<", callback_data=callback_data)
+            InlineKeyboardButton("⬅️", callback_data=callback_data)
         )
 
     if books:
         callback_data = f'search_books {page+1} {search_query}'
         buttons.append(
-            InlineKeyboardButton(">", callback_data=callback_data)
+            InlineKeyboardButton("➡️", callback_data=callback_data)
         )
 
     markup = InlineKeyboardMarkup([buttons])
@@ -166,7 +166,7 @@ def books(bot, update):
 
     result = []
     for book in books:
-        book['link'] = f"[->]({book['link']})"
+        book['link'] = f"[→]({book['link']})"
         book_md = (
             f"*{strip_tags(book['title'])}* "
             f"{book['link']}\n"
@@ -183,12 +183,12 @@ def books(bot, update):
     buttons = [[]]
     if page > 1:
         buttons[0].append(
-            InlineKeyboardButton("<", callback_data=f'books_{shelf}_{page-1}')
+            InlineKeyboardButton("⬅️", callback_data=f'books_{shelf}_{page-1}')
         )
 
     if len(books) == per_page:
         buttons[0].append(
-            InlineKeyboardButton(">", callback_data=f'books_{shelf}_{page+1}')
+            InlineKeyboardButton("➡️", callback_data=f'books_{shelf}_{page+1}')
         )
 
     buttons.append(
