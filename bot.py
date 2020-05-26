@@ -225,12 +225,10 @@ def _book_buttons(shelf, book_id, user_id):
         else:
             continue
 
-        button = InlineKeyboardButton(button_text, callback_data=callback_data)
+        button = [InlineKeyboardButton(button_text, callback_data=callback_data)]
         buttons.append(button)
 
-    markup = InlineKeyboardMarkup([
-        buttons
-    ])
+    markup = InlineKeyboardMarkup(buttons)
 
     return markup
 
