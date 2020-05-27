@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.DEBUG,
 logger = logging.getLogger(__name__)
 
 
-def start_handler(bot, update):
+def start_handler(update, context):
     text = (
         "Этот бот разрабатывается для замены приложения *Goodreads.com*. \n"
         "В данный момент имеется возможность управление списками книг, "
@@ -40,7 +40,7 @@ def start_handler(bot, update):
                                   disable_web_page_preview=True)
 
 
-def search_books(bot, update):
+def search_books(update, context):
     page = 1
     if not update.message:
         logger.info(f"message: {update.callback_query.data}")
@@ -61,7 +61,7 @@ def search_books(bot, update):
                                                page=page)
     except AuthError as ex:
         logger.error(f"AuthError: user_id {user_id}")
-        return bot.send_message(user_id, text=str(ex))
+        return context.bot.send_message(user_id, text=str(ex))
 
     result = []
     for index, book in enumerate(books):
@@ -105,7 +105,7 @@ def search_books(bot, update):
                                       reply_markup=markup)
 
 
-def shelves(bot, update):
+def shelves(update, context):
     if not update.message:
         logger.info(f"message: {update.callback_query.data}")
         user_id = update.callback_query.from_user.id
@@ -119,7 +119,7 @@ def shelves(bot, update):
         shelves = goodreads_api.get_shelves(user_id)
     except AuthError as ex:
         logger.error(f"AuthError: user_id {user_id}")
-        return bot.send_message(user_id, text=str(ex))
+        return context.bot.send_message(user_id, text=str(ex))
 
     buttons = []
     for s in shelves:
@@ -141,7 +141,7 @@ def shelves(bot, update):
                                       reply_markup=markup)
 
 
-def books(bot, update):
+def books(update, context):
     page = 1
     per_page = 5
     shelf = 'etc'
@@ -162,7 +162,7 @@ def books(bot, update):
         books = goodreads_api.get_books(user_id, page, per_page, shelf)
     except AuthError as ex:
         logger.error(f"AuthError: user_id {user_id}")
-        return bot.send_message(user_id, text=str(ex))
+        return context.bot.send_message(user_id, text=str(ex))
 
     result = []
     for book in books:
@@ -233,7 +233,7 @@ def _book_buttons(shelf, book_id, user_id):
     return markup
 
 
-def book(bot, update):
+def book(update, context):
     user_id = update.message.from_user.id
     book_id = update.message.text.split('_')[1]
 
@@ -244,7 +244,7 @@ def book(bot, update):
         book = goodreads_api.get_book(user_id, book_id)
     except AuthError as ex:
         logger.error(f"AuthError: user_id {user_id}")
-        return bot.send_message(user_id, text=str(ex))
+        return context.bot.send_message(user_id, text=str(ex))
 
     markup = _book_buttons(book.get('shelf'), book_id, user_id)
 
@@ -253,7 +253,7 @@ def book(bot, update):
                               reply_markup=markup)
 
 
-def add_to_shelf(bot, update):
+def add_to_shelf(update, context):
     query = update.callback_query
     logger.info(f"query: {query}")
 
@@ -272,9 +272,9 @@ def add_to_shelf(bot, update):
                                                    book_id, remove=remove)
     except (AuthError, ApiError) as ex:
         logger.error(str(ex))
-        return bot.send_message(user_id, str(ex))
+        return context.bot.send_message(user_id, str(ex))
 
-    bot.answer_callback_query(query.id, response_text)
+    context.bot.answer_callback_query(query.id, response_text)
 
     if remove:
         shelf = None
@@ -284,7 +284,7 @@ def add_to_shelf(bot, update):
 
 
 # TODO: prevent multiple /autorize
-def authorize(bot, update):
+def authorize(update, context):
     req_token, req_token_secret = goodreads_service.get_request_token(
                                                         header_auth=True
                                                     )
@@ -310,7 +310,7 @@ def authorize(bot, update):
                               reply_markup=markup)
 
 
-def check_auth(bot, update):
+def check_auth(update, context):
     query = update.callback_query
     user_id = query.from_user.id
 
@@ -323,7 +323,7 @@ def check_auth(bot, update):
         session = goodreads_service.get_auth_session(*tokens)
     except KeyError:
         logger.error(f"authorize error: user_id {user_id}")
-        bot.answer_callback_query(query.id, "Ошибка авторизации!")
+        context.bot.answer_callback_query(query.id, "Ошибка авторизации!")
         return
 
     goodreads_id = goodreads_api.me(session)
@@ -342,21 +342,13 @@ def check_auth(bot, update):
     update.callback_query.edit_message_text(str(f"Авторизован:{goodreads_id}")) 
 
 
-updater = Updater(TELEGRAM_BOT_TOKEN)
+updater = Updater(TELEGRAM_BOT_TOKEN,  use_context=True)
 
 updater.dispatcher.add_handler(CommandHandler('start', start_handler))
 
 updater.dispatcher.add_handler(CommandHandler('authorize', authorize))
 updater.dispatcher.add_handler(
     CallbackQueryHandler(check_auth, pattern='check_auth')
-)
-
-updater.dispatcher.add_handler(CommandHandler('search_books', search_books))
-updater.dispatcher.add_handler(
-    CallbackQueryHandler(search_books, pattern='search_books')
-)
-updater.dispatcher.add_handler(
-    MessageHandler(Filters.text, callback=search_books)
 )
 
 updater.dispatcher.add_handler(CommandHandler('shelves', shelves))
@@ -370,7 +362,7 @@ updater.dispatcher.add_handler(
 )
 
 updater.dispatcher.add_handler(
-    RegexHandler(re.compile(r'^/book_\d*$'), book)
+    MessageHandler(Filters.regex(r'^/book_\d*$'), book)
 )
 
 updater.dispatcher.add_handler(
@@ -379,6 +371,14 @@ updater.dispatcher.add_handler(
 
 updater.dispatcher.add_handler(
     CallbackQueryHandler(add_to_shelf, pattern='rm_from_shelf')
+)
+
+updater.dispatcher.add_handler(CommandHandler('search_books', search_books))
+updater.dispatcher.add_handler(
+    CallbackQueryHandler(search_books, pattern='search_books')
+)
+updater.dispatcher.add_handler(
+    MessageHandler(Filters.text, callback=search_books)
 )
 
 if os.environ.get("HEROKU"):
