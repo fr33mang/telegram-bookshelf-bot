@@ -192,7 +192,7 @@ def books(bot, update):
         )
 
     buttons.append(
-        [InlineKeyboardButton("Список полок", callback_data=f'shelves')]
+        [InlineKeyboardButton("Список полок ↩️", callback_data='shelves')]
     )
 
     markup = InlineKeyboardMarkup(buttons)
@@ -212,15 +212,15 @@ def _book_buttons(shelf, book_id, user_id):
     shelves = goodreads_api.get_shelves(user_id)
 
     shelves = {shelf['show_name']: shelf['name'] for shelf in shelves}
-    shelves['🗑'] = "remove" if shelf else None
+    shelves['Remove 🗑'] = "remove" if shelf else None
 
     buttons = []
     for text, value in shelves.items():
-        if text != '🗑':
-            button_text = text if shelf != value else f"✔️{text}"
+        if text != 'Remove 🗑':
+            button_text = text if shelf != value else f"{text} 📚"
             callback_data = f'add_to_shelf {value} {book_id}'
         elif bool(shelf):
-            button_text = '🗑'
+            button_text = 'Remove 🗑'
             callback_data = f'rm_from_shelf {shelf} {book_id}'
         else:
             continue
