@@ -39,7 +39,7 @@ class GoodreadsAPI():
             "q": search_query,
             "key": CONSUMER_KEY,
             "page": page,
-            "per_page": 5,
+            "per_page": per_page,
         }
         response = session.get(f'/search/index.xml',
                                params=params)
@@ -47,7 +47,7 @@ class GoodreadsAPI():
         root = ElementTree.fromstring(response.content)
 
         books = []
-        book_fields = ['title', 'id']
+        book_fields = ['title', 'id', 'image_url']
         for entry in root.iter('best_book'):
             book = {field: entry.find(field).text for field in book_fields}
             authors = [auth.find('name').text for auth in entry.iter('author')]
@@ -140,7 +140,7 @@ class GoodreadsAPI():
         if description:
             book_md = book_md + f"{book['description'][:200]}... "
 
-        book_md = book_md + f"[на сайте]({book['link']})\n"
+        book_md = book_md + f"[На сайте 🌎]({book['link']})\n"
 
         response = {
             "markdown": book_md,
