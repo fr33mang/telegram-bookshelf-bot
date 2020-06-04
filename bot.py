@@ -2,13 +2,15 @@ import os
 import logging
 import re
 
+from uuid import uuid4
+
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton, InputTextMessageContent, InlineQueryResultArticle, ParseMode
 from telegram.ext import (
     Updater, CommandHandler,
     CallbackQueryHandler, RegexHandler,
-    MessageHandler
+    MessageHandler, InlineQueryHandler
 )
 from telegram.ext.filters import Filters
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 
 from postgres import conn
 from service import goodreads_service
@@ -26,13 +28,13 @@ logger = logging.getLogger(__name__)
 
 def start_handler(update, context):
     text = (
-        "Этот бот разрабатывается для замены приложения *Goodreads.com*. \n"
-        "В данный момент имеется возможность управление списками книг, "
-        "а также, для поиска и добавления новых книг. \n"
-        "Перед началом работы используйте: \n /authorize, \n"
-        "после перехода по ссылке и авторизации нажмите 'Готово!' \n"
-        "Для поиска отправьте в сообщении название книги, либо имя автора \n"
+        "Бот разрабатывается для замены приложения *Goodreads.com*. \n"
+        " В данный момент имеется возможность управления списками книг, поиска и добавления книг, а также inline поиск. \n "
+        "Перед началом работы используйте: \n /authorize, \n "
+        "после перехода по ссылке и авторизации нажмите 'Готово!' \n "
+        "Для поиска отправьте в сообщении текст. \n"
         "Для просмотра полок используйте /shelves \n"
+        "Исходный код: https://github.com/fr33mang/telegram-bookshelf-bot"
     )
 
     update.message.reply_markdown(text=str(text),
@@ -283,6 +285,75 @@ def add_to_shelf(update, context):
     update.callback_query.edit_message_reply_markup(reply_markup=markup)
 
 
+def inlinebook(update, context):
+    user_id = update.callback_query.from_user.id
+    book_id = update.callback_query.data.split(' ')[1]
+
+    logger.info((f"user_id: {user_id}, "
+                 f"book_id:{book_id}, "
+                 f"query: {update.callback_query.data}"))
+
+    try:
+        book = goodreads_api.get_book(user_id, book_id)
+    except AuthError as ex:
+        logger.error(f"AuthError: user_id {user_id}")
+        return context.bot.send_message(user_id, text=str(ex))
+
+    markup = _book_buttons(book.get('shelf'), book_id, user_id)
+
+    context.bot.send_message(user_id,
+                             text=strip_tags(book['markdown']),
+                             parse_mode=ParseMode.MARKDOWN,
+                             reply_markup=markup)
+
+
+def inlinequery(update, context):
+    query = update.inline_query.query
+    user_id = update.inline_query.from_user.id
+    page = int(update.inline_query.offset or 1)
+
+    logger.info(f"query: {query}, page: {page}")
+
+    try:
+        books = goodreads_api.get_search_books(user_id, query, page=page, per_page=20)
+    except AuthError as ex:
+        logger.error(f"AuthError: user_id {user_id}")
+        result = [(
+            InlineQueryResultArticle(
+                id=uuid4(),
+                title="Запустите бота!",
+                description="Для использования бота, нажмите на кнопку выше, и авторизуйтесь в Goodreads, согласно инструкции",
+                input_message_content=InputTextMessageContent("None"),
+            )
+        )]
+
+        return update.inline_query.answer(result, cache_time=0, switch_pm_text="Добавить бота", switch_pm_parameter="f")
+
+    result = []
+    for index, book in enumerate(books):
+        book_md = (
+            f"*{strip_tags(book['title'])}* \n"
+            f"{', '.join(book['authors'])}\n"
+            f"[На сайте 🌎](https://www.goodreads.com/book/show/{book['id']})"
+        )
+
+        result.append(
+            InlineQueryResultArticle(
+                id=uuid4(),
+                title=strip_tags(book["title"]),
+                thumb_url=book["image_url"],
+                description=f"{', '.join(book['authors'])}",
+                input_message_content=InputTextMessageContent(
+                    book_md,
+                    ParseMode.MARKDOWN
+                ),
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Добавить книгу 📚", callback_data=f"inlinebook {book['id']}")]])
+            )
+        )
+
+    update.inline_query.answer(result, next_offset=page + 1)
+
+
 # TODO: prevent multiple /autorize
 def authorize(update, context):
     req_token, req_token_secret = goodreads_service.get_request_token(
@@ -372,6 +443,12 @@ updater.dispatcher.add_handler(
 updater.dispatcher.add_handler(
     CallbackQueryHandler(add_to_shelf, pattern='rm_from_shelf')
 )
+
+updater.dispatcher.add_handler(
+    CallbackQueryHandler(inlinebook, pattern='inlinebook')
+)
+
+updater.dispatcher.add_handler(InlineQueryHandler(inlinequery))
 
 updater.dispatcher.add_handler(CommandHandler('search_books', search_books))
 updater.dispatcher.add_handler(
