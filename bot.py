@@ -1,21 +1,18 @@
-import os
 import logging
-import re
-
+import os
 from uuid import uuid4
 
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton, InputTextMessageContent, InlineQueryResultArticle, ParseMode
-from telegram.ext import (
-    Updater, CommandHandler,
-    CallbackQueryHandler, RegexHandler,
-    MessageHandler, InlineQueryHandler
-)
+from telegram import (InlineKeyboardButton, InlineKeyboardMarkup,
+                      InlineQueryResultArticle, InputTextMessageContent,
+                      ParseMode)
+from telegram.ext import (CallbackQueryHandler, CommandHandler,
+                          InlineQueryHandler, MessageHandler, Updater)
 from telegram.ext.filters import Filters
 
+from api import ApiError, AuthError, goodreads_api
+from config import APP_URL, PORT, TELEGRAM_BOT_TOKEN
 from postgres import conn
 from service import goodreads_service
-from api import goodreads_api, AuthError, ApiError
-from config import TELEGRAM_BOT_TOKEN, PORT, APP_URL
 from utils import strip_tags
 
 logging.basicConfig(level=logging.DEBUG,
@@ -28,13 +25,7 @@ logger = logging.getLogger(__name__)
 
 def start_handler(update, context):
     text = (
-        "Бот разрабатывается для замены приложения *Goodreads.com*. \n"
-        " В данный момент имеется возможность управления списками книг, поиска и добавления книг, а также inline поиск. \n "
-        "Перед началом работы используйте: \n /authorize, \n "
-        "после перехода по ссылке и авторизации нажмите 'Готово!' \n "
-        "Для поиска отправьте в сообщении текст. \n"
-        "Для просмотра полок используйте /shelves \n"
-        "Исходный код: https://github.com/fr33mang/telegram-bookshelf-bot"
+        "Для начала работы используйте /authorize, для авторизации *Goodreads.com*. \n"
     )
 
     update.message.reply_markdown(text=str(text),
@@ -316,13 +307,13 @@ def inlinequery(update, context):
 
     try:
         books = goodreads_api.get_search_books(user_id, query, page=page, per_page=20)
-    except AuthError as ex:
+    except AuthError:
         logger.error(f"AuthError: user_id {user_id}")
         result = [(
             InlineQueryResultArticle(
                 id=uuid4(),
                 title="Запустите бота!",
-                description="Для использования бота, нажмите на кнопку выше, и авторизуйтесь в Goodreads, согласно инструкции",
+                description="Для использования бота, нажмите на кнопку выше, и авторизуйтесь в Goodreads",
                 input_message_content=InputTextMessageContent("None"),
             )
         )]
@@ -337,6 +328,7 @@ def inlinequery(update, context):
             f"[На сайте 🌎](https://www.goodreads.com/book/show/{book['id']})"
         )
 
+        add_book_button = InlineKeyboardButton("Добавить книгу 📚", callback_data=f"inlinebook {book['id']}")
         result.append(
             InlineQueryResultArticle(
                 id=uuid4(),
@@ -347,7 +339,7 @@ def inlinequery(update, context):
                     book_md,
                     ParseMode.MARKDOWN
                 ),
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Добавить книгу 📚", callback_data=f"inlinebook {book['id']}")]])
+                reply_markup=InlineKeyboardMarkup([[add_book_button]])
             )
         )
 
@@ -410,7 +402,7 @@ def check_auth(update, context):
                                       user_id))
     conn.commit()
 
-    update.callback_query.edit_message_text(str(f"Авторизован:{goodreads_id}")) 
+    update.callback_query.edit_message_text(str(f"Авторизован:{goodreads_id}"))
 
 
 updater = Updater(TELEGRAM_BOT_TOKEN,  use_context=True)
