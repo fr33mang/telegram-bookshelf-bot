@@ -1,7 +1,7 @@
 from xml.etree import ElementTree
-from service import _session
 
 from config import CONSUMER_KEY
+from service import _session
 
 
 class AuthError(Exception):
@@ -41,7 +41,7 @@ class GoodreadsAPI():
             "page": page,
             "per_page": per_page,
         }
-        response = session.get(f'/search/index.xml',
+        response = session.get("/search/index.xml",
                                params=params)
 
         root = ElementTree.fromstring(response.content)
@@ -66,7 +66,7 @@ class GoodreadsAPI():
             "user_id": goodreads_id,
             "format": "xml",
         }
-        response = session.get(f'/shelf/list.xml',
+        response = session.get("/shelf/list.xml",
                                params=params)
 
         root = ElementTree.fromstring(response.content)
@@ -92,7 +92,7 @@ class GoodreadsAPI():
             "shelf": shelf,
             "per_page": per_page,
         }
-        response = session.get(f'/review/list',
+        response = session.get("/review/list",
                                params=params)
 
         root = ElementTree.fromstring(response.content)
@@ -161,11 +161,11 @@ class GoodreadsAPI():
         }
         if remove:
             params['name'] = 'to-read'
-            response = session.get(f'shelf/add_to_shelf.xml',
+            response = session.get("shelf/add_to_shelf.xml",
                                    params=params)
             params['a'] = 'remove'
 
-        response = session.get(f'shelf/add_to_shelf.xml',
+        response = session.get("shelf/add_to_shelf.xml",
                                params=params)
 
         if response.status_code not in (200, 201):
