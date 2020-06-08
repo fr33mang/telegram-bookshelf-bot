@@ -3,11 +3,14 @@ services:
   bot:
     container_name: bot
     build: .
-    env_file: ./.environment
+    volumes:
+      - .:/code
+    env_file: .environment
+    command: python3 bot.py
     depends_on:
       - db
   db:
     image: "postgres:11"
     container_name: "postgres"
     ports:
-      - "54320:5432"
+      - "5432:5432"
