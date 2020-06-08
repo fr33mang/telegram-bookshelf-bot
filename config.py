@@ -7,7 +7,7 @@ APP_URL = os.environ.get("APP_URL", "")
 
 # Postgres connection string
 DATABASE_URL = os.environ.get('DATABASE_URL',
-                              'postgresql://postgres@postgres:5432/')
+                              'postgresql://postgres:postgres@postgres:5432/')
 
 # Goodreads api keys
 CONSUMER_KEY = os.environ.get('CONSUMER_KEY', '')
