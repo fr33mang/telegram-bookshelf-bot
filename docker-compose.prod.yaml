@@ -1,0 +1,7 @@
+version: "3"
+services:
+  bot:
+    container_name: bot
+    build: .
+    env_file: .environment_prod
+    command: python3 bot.py
