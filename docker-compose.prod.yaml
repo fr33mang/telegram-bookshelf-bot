@@ -5,3 +5,15 @@ services:
     build: .
     env_file: .environment_prod
     command: python3 bot.py
+  db:
+    image: postgres:12
+    container_name: db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - /var/lib/postgresql/9.5:/var/lib/postgresql/data:rw
+    ports:
+      - "54333:5432"
