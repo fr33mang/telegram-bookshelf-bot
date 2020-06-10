@@ -406,12 +406,8 @@ def check_auth(update, context):
 
 
 def logout(update, context):
-    if not update.message:
-        logger.info(f"message: {update.callback_query.data}")
-        user_id = update.callback_query.from_user.id
-    else:
-        logger.info(f"message: {update.message.text}")
-        user_id = update.message.from_user.id
+    logger.info(f"message: {update.message.text}")
+    user_id = update.message.from_user.id
 
     with conn.cursor() as cur:
         cur.execute("DELETE FROM tokens "
@@ -427,9 +423,7 @@ def logout(update, context):
         "Успешно! \n"
     )
 
-    update.message.reply_markdown(text=str(text),
-                                  parse_mode=ParseMode.MARKDOWN,
-                                  disable_web_page_preview=True)
+    update.message.reply_text(text=text)
 
 
 updater = Updater(TELEGRAM_BOT_TOKEN,  use_context=True)
