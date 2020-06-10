@@ -405,6 +405,27 @@ def check_auth(update, context):
     update.callback_query.edit_message_text(str(f"Авторизован:{goodreads_id}"))
 
 
+def logout(update, context):
+    logger.info(f"message: {update.message.text}")
+    user_id = update.message.from_user.id
+
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM tokens "
+                    "where id = %s "
+                    "RETURNING id", [user_id])
+        count = cur.fetchone()
+    conn.commit()
+
+    if not count:
+        return start_handler(update, context)
+
+    text = (
+        "Успешно! \n"
+    )
+
+    update.message.reply_text(text=text)
+
+
 updater = Updater(TELEGRAM_BOT_TOKEN,  use_context=True)
 
 updater.dispatcher.add_handler(CommandHandler('start', start_handler))
@@ -439,6 +460,8 @@ updater.dispatcher.add_handler(
 updater.dispatcher.add_handler(
     CallbackQueryHandler(inlinebook, pattern='inlinebook')
 )
+
+updater.dispatcher.add_handler(CommandHandler('logout', logout))
 
 updater.dispatcher.add_handler(InlineQueryHandler(inlinequery))
 
