@@ -16,7 +16,8 @@ def session_decorator(func):
     def wrapper(self, *args, **kwargs):
         session = _session(args[0])
         if not session:
-            raise AuthError("Пожалуйста, используйте /authorize")
+            raise AuthError("""Попробуйте авторизоваться через /authorize, """
+                            """либо используйте /logout и /authorize для повторной авторизации, в случае проблем с доступом""")
 
         kwargs['session'] = session
         return func(self, *args[1:], **kwargs)

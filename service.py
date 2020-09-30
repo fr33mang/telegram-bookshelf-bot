@@ -19,11 +19,8 @@ def _session(user_id):
         cur.execute("SELECT access_token, access_token_secret "
                     "FROM tokens where id = %s", (user_id,))
         tokens = cur.fetchone()
-    conn.commit()
 
-    if tokens is not None:
-        session = goodreads_service.get_session(tokens)
-    else:
-        return None
+    if tokens and all(tokens):
+        return goodreads_service.get_session(tokens)
 
-    return session
+    return None

@@ -123,12 +123,12 @@ def shelves(update, context):
 
     markup = InlineKeyboardMarkup(buttons)
     if update.callback_query:
-        update.callback_query.edit_message_text(text="Выберите полку",
+        update.callback_query.edit_message_text(text="Выберите полку 📚",
                                                 parse_mode=ParseMode.MARKDOWN,
                                                 disable_web_page_preview=True,
                                                 reply_markup=markup)
     else:
-        update.message.reply_markdown("Выберите полку",
+        update.message.reply_markdown("Выберите полку 📚",
                                       parse_mode=ParseMode.MARKDOWN,
                                       disable_web_page_preview=True,
                                       reply_markup=markup)
@@ -402,7 +402,10 @@ def check_auth(update, context):
                                       user_id))
     conn.commit()
 
-    update.callback_query.edit_message_text(str(f"Авторизован:{goodreads_id}"))
+    message = ("""Авторизация успешна 🚀\n"""
+               """Для начала работы просто попробуйте отправить боту название книги 📖\n"""
+               """Либо загляните на свои полки 📚 с помощью /shelves""")
+    update.callback_query.edit_message_text(message)
 
 
 def logout(update, context):
@@ -420,7 +423,7 @@ def logout(update, context):
         return start_handler(update, context)
 
     text = (
-        "Успешно! \n"
+        "Готово!\nДля повторной авторизации бота используйте /authorize"
     )
 
     update.message.reply_text(text=text)
