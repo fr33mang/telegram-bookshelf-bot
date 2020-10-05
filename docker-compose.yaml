@@ -1,8 +1,10 @@
-version: "3"
+version: "3.4"
 services:
   bot:
     container_name: bot
-    build: .
+    build:
+      context: .
+      target: dev_build
     volumes:
       - .:/code
     env_file: .environment
