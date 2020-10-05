@@ -224,6 +224,20 @@ def _book_buttons(shelf, book_id, user_id):
     return markup
 
 
+def _book_markdown(book):
+    book_md = (
+        f"*{book['title']}* \n"
+        f"{', '.join(book['authors'])}\n\n"
+    )
+    description = book.get('description')
+    if description:
+        book_md = book_md + f"{book['description'][:200]}... "
+
+    book_md = book_md + f"[На сайте 🌎]({book['link']})\n"
+
+    return strip_tags(book_md)
+
+
 def book(update, context):
     user_id = update.message.from_user.id
     book_id = update.message.text.split('_')[1]
@@ -239,7 +253,9 @@ def book(update, context):
 
     markup = _book_buttons(book.get('shelf'), book_id, user_id)
 
-    update.message.reply_text(text=strip_tags(book['markdown']),
+    book_md = _book_markdown(book)
+
+    update.message.reply_text(text=book_md,
                               parse_mode=ParseMode.MARKDOWN,
                               reply_markup=markup)
 
@@ -290,8 +306,10 @@ def inlinebook(update, context):
 
     markup = _book_buttons(book.get('shelf'), book_id, user_id)
 
+    book_md = _book_markdown(book)
+
     context.bot.send_message(user_id,
-                             text=strip_tags(book['markdown']),
+                             text=book_md,
                              parse_mode=ParseMode.MARKDOWN,
                              reply_markup=markup)
 

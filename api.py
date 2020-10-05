@@ -134,18 +134,11 @@ class GoodreadsAPI():
 
         shelf_xml = root.find("./book/my_review/shelves/shelf")
 
-        book_md = (
-            f"*{book['title']}* \n"
-            f"{', '.join(book['authors'])}\n\n"
-        )
-        description = book.get('description')
-        if description:
-            book_md = book_md + f"{book['description'][:200]}... "
-
-        book_md = book_md + f"[На сайте 🌎]({book['link']})\n"
-
         response = {
-            "markdown": book_md,
+            "title": book["title"],
+            "authors": book["authors"],
+            "description": book.get("description"),
+            "link": book["link"],
             "image": book['image_url'] or book['small_image_url']
         }
         if shelf_xml is not None:
