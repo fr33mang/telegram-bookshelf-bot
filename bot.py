@@ -86,16 +86,16 @@ def search_books(update, context):
     else:
         result = "*Это всё!*"
 
+    params = {
+        "text": result,
+        "parse_mode": ParseMode.MARKDOWN,
+        "disable_web_page_preview": True,
+        "reply_markup": markup,
+    }
     if update.callback_query:
-        update.callback_query.edit_message_text(str(result),
-                                                parse_mode=ParseMode.MARKDOWN,
-                                                disable_web_page_preview=True,
-                                                reply_markup=markup)
+        update.callback_query.edit_message_text(**params)
     else:
-        update.message.reply_markdown(text=str(result),
-                                      parse_mode=ParseMode.MARKDOWN,
-                                      disable_web_page_preview=True,
-                                      reply_markup=markup)
+        update.message.reply_markdown(**params)
 
 
 def shelves(update, context):
@@ -121,17 +121,16 @@ def shelves(update, context):
                                   callback_data=f"books_{s['name']}_1")]
         )
 
-    markup = InlineKeyboardMarkup(buttons)
+    params = {
+        "text": "Выберите полку 📚",
+        "parse_mode": ParseMode.MARKDOWN,
+        "disable_web_page_preview": True,
+        "reply_markup": InlineKeyboardMarkup(buttons),
+    }
     if update.callback_query:
-        update.callback_query.edit_message_text(text="Выберите полку 📚",
-                                                parse_mode=ParseMode.MARKDOWN,
-                                                disable_web_page_preview=True,
-                                                reply_markup=markup)
+        update.callback_query.edit_message_text(**params)
     else:
-        update.message.reply_markdown("Выберите полку 📚",
-                                      parse_mode=ParseMode.MARKDOWN,
-                                      disable_web_page_preview=True,
-                                      reply_markup=markup)
+        update.message.reply_markdown(**params)
 
 
 def books(update, context):
@@ -188,17 +187,16 @@ def books(update, context):
         [InlineKeyboardButton("Список полок ↩️", callback_data='shelves')]
     )
 
-    markup = InlineKeyboardMarkup(buttons)
+    params = {
+        "text": result,
+        "parse_mode": ParseMode.MARKDOWN,
+        "disable_web_page_preview": True,
+        "reply_markup": InlineKeyboardMarkup(buttons),
+    }
     if update.callback_query:
-        update.callback_query.edit_message_text(str(result),
-                                                parse_mode=ParseMode.MARKDOWN,
-                                                disable_web_page_preview=True,
-                                                reply_markup=markup)
+        update.callback_query.edit_message_text(**params)
     else:
-        update.message.reply_markdown(text=str(result),
-                                      parse_mode=ParseMode.MARKDOWN,
-                                      disable_web_page_preview=True,
-                                      reply_markup=markup)
+        update.message.reply_markdown(**params)
 
 
 def _book_buttons(shelf, book_id, user_id):
