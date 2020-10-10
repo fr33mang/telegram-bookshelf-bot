@@ -14,7 +14,7 @@ class ApiError(Exception):
 
 def session_decorator(func):
     def wrapper(self, *args, **kwargs):
-        session = goodreads_service.get_session(user_id=args[0])
+        session = goodreads_service.get_db_tokens_session(args[0])
         if not session:
             raise AuthError("""Попробуйте авторизоваться через /authorize, """
                             """либо используйте /logout и /authorize для повторной авторизации, """

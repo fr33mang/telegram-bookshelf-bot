@@ -5,19 +5,15 @@ from postgres import conn
 
 
 class MyOAuth1Service(OAuth1Service):
-    def get_session(self, token=None, signature=None, user_id=None):
-        if not user_id:
-            return super().get_session(token=token, signature=signature)
-
+    def get_db_tokens_session(self, user_id):
         with conn.cursor() as cur:
             cur.execute("SELECT access_token, access_token_secret "
-                        "FROM tokens where id = %s", (user_id,))
+                        "FROM tokens "
+                        "where id = %s", (user_id,))
             tokens = cur.fetchone()
 
         if tokens and all(tokens):
             return super().get_session(token=tokens)
-
-        return None
 
 
 goodreads_service = MyOAuth1Service(
