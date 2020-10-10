@@ -445,7 +445,7 @@ def logout(update, context):
     update.message.reply_text(text=text)
 
 
-updater = Updater(TELEGRAM_BOT_TOKEN,  use_context=True)
+updater = Updater(TELEGRAM_BOT_TOKEN)
 
 updater.dispatcher.add_handler(CommandHandler('start', start_handler))
 
