@@ -156,15 +156,15 @@ class GoodreadsAPI():
         }
         if remove:
             params['name'] = 'to-read'
-            response = session.get("shelf/add_to_shelf.xml",
-                                   params=params)
+            response = session.post("shelf/add_to_shelf.xml",
+                                   data=params)
             params['a'] = 'remove'
 
-        response = session.get("shelf/add_to_shelf.xml",
-                               params=params)
+        response = session.post("shelf/add_to_shelf",
+                                data=params)
 
         if response.status_code not in (200, 201):
-            raise ApiError("Ошибка добавления!")
+            raise ApiError(f"Ошибка добавления! status: {response.status_code} data: {data}")
 
         message = "Книга добавлена на полку!"
         if remove:
