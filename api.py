@@ -150,18 +150,18 @@ class GoodreadsAPI():
     def add_to_shelf(self, shelf, book_id, remove=False, session=None):
         # can also remove book from shelf (tnx for greads developers)
 
-        params = {
+        data = {
             'name': shelf,
             'book_id': book_id,
         }
         if remove:
-            params['name'] = 'to-read'
+            data['name'] = 'to-read'
             response = session.post("shelf/add_to_shelf.xml",
-                                   data=params)
-            params['a'] = 'remove'
+                                    data=data)
+            data['a'] = 'remove'
 
         response = session.post("shelf/add_to_shelf",
-                                data=params)
+                                data=data)
 
         if response.status_code not in (200, 201):
             raise ApiError(f"Ошибка добавления! status: {response.status_code} data: {data}")
