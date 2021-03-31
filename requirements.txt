@@ -1,4 +1,4 @@
-lxml==4.5.2
+lxml==4.6.3
 psycopg2-binary==2.8.6
 PySocks==1.7.1
 python-telegram-bot==13.0
