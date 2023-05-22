@@ -3,4 +3,4 @@ psycopg2-binary==2.8.6
 PySocks==1.7.1
 python-telegram-bot==13.0
 rauth==0.7.3
-requests==2.24.0
+requests==2.31.0
